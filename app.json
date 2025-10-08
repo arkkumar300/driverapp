@@ -9,16 +9,32 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sureshpentapilli.boltexponativewind"
     },
     "web": {
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/images/finallogo4.png"
     },
-    "plugins": ["expo-router", "expo-font", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2f72e5c5-4dbe-4504-9b49-a3d8725b6e7f"
+      }
+    },
+    "android": {
+      "package": "com.sureshpentapilli.boltexponativewind",
+      "versionCode": 1
+    },
+    "owner": "esotericprojects"
   }
 }

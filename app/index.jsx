@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function IndexScreen() {
   const [isReady, setIsReady] = useState(false);
@@ -14,20 +15,23 @@ export default function IndexScreen() {
   }, []);
 
   useEffect(() => {
+
+    const rrr=async ()=>{
     if (!isReady) return;
+const isAuthenticated=await AsyncStorage.getItem("isLogin") || 'false';
 
-    const isAuthenticated = false; // Replace with actual auth logic
-
-    if (isAuthenticated) {
+if (isAuthenticated==='true') {
       router.replace('/(tabs)');
     } else {
       router.replace('/auth/login');
     }
+  }
+  rrr();
   }, [isReady]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" />
+      <ActivityIndicator size="large" color={"green"} />
     </View>
   );
 }

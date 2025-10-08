@@ -1,60 +1,64 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-} from 'react-native';
-import { Phone, MapPin, Clock, IndianRupee, Navigation, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import React, { useState,useCallback } from 'react';
+import {View,Text,StyleSheet,TouchableOpacity,ScrollView,Alert} from 'react-native';
+import { Phone, MapPin, Clock, Navigation, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useFocusEffect } from "@react-navigation/native";
+import dayjs from 'dayjs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApiService from '../../hooks/ApiServices';
 
 export default function RidesScreen() {
-  const [activeTab, setActiveTab] = useState('incoming');
+  const [activeTab, setActiveTab] = useState('today');
+  const [driverData, setDriverData] = useState(null);
+  const [todayRides, setTodayRides] = useState([]);
+  const [previousRides, setPreviousRides] = useState([]);
+  const [raidList, setRaidList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const incomingRides = [
-    {
-      id: 1,
-      type: 'Package',
-      name: 'Tirupati Local Temples',
-      code: 'TIR001',
-      pickup: 'Tirupati Railway Station',
-      customer: 'Priya Sharma',
-      phone: '+91 98765 43210',
-      vehicle: '4-seater',
-      amount: '₹2,850',
-      distance: '2.3 km',
-      eta: '8 mins',
-    },
-    {
-      id: 2,
-      type: 'Airport',
-      name: 'Airport → Tirumala Drop',
-      pickup: 'Chennai Airport Terminal 1',
-      customer: 'Ramesh Kumar',
-      phone: '+91 87654 32109',
-      vehicle: '7-seater',
-      amount: '₹4,000',
-      distance: '5.1 km',
-      eta: '15 mins',
-    },
-  ];
+  // const todayRides = [
+  //   {
+  //     id: 1,
+  //     type: 'Package',
+  //     name: 'Tirupati Local Temples',
+  //     code: 'TIR001',
+  //     pickup: 'Tirupati Railway Station',
+  //     customer: 'Priya Sharma',
+  //     phone: '+91 98765 43210',
+  //     vehicle: '4-seater',
+  //     amount: '₹2,850',
+  //     distance: '2.3 km',
+  //     eta: '8 mins',
+  //   },
+  //   {
+  //     id: 2,
+  //     type: 'Airport',
+  //     name: 'Airport → Tirumala Drop',
+  //     pickup: 'Chennai Airport Terminal 1',
+  //     customer: 'Ramesh Kumar',
+  //     phone: '+91 87654 32109',
+  //     vehicle: '7-seater',
+  //     amount: '₹4,000',
+  //     distance: '5.1 km',
+  //     eta: '15 mins',
+  //   },
+  // ];
 
-  const ongoingRides = [
-    {
-      id: 3,
-      type: 'Package',
-      name: 'Kalahasti Circuit',
-      code: 'KAL002',
-      pickup: 'Kalahasti Temple',
-      customer: 'Sita Devi',
-      phone: '+91 76543 21098',
-      vehicle: '6-seater',
-      amount: '₹3,400',
-      status: 'in_progress',
-      timeElapsed: '1h 30m',
-    },
-  ];
+  // const PreviousRides = [
+  //   {
+  //     id: 3,
+  //     type: 'Package',
+  //     name: 'Kalahasti Circuit',
+  //     code: 'KAL002',
+  //     pickup: 'Kalahasti Temple',
+  //     customer: 'Sita Devi',
+  //     phone: '+91 76543 21098',
+  //     vehicle: '6-seater',
+  //     amount: '₹3,400',
+  //     status: 'in_progress',
+  //     timeElapsed: '1h 30m',
+  //   },
+  // ];
 
   const handleAcceptRide = (ride) => {
     Alert.alert(
@@ -62,7 +66,14 @@ export default function RidesScreen() {
       `Accept ${ride.name} for ${ride.amount}?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Accept', onPress: () => console.log('Ride accepted') },
+        {
+          text: 'Accept',
+          onPress: () => {
+            console.log('Ride accepted');
+            // navigation or router push
+            // e.g. router.push(`/ride-detail?rideId=${ride.id}`);
+          }
+        },
       ]
     );
   };
@@ -78,34 +89,34 @@ export default function RidesScreen() {
     );
   };
 
-  const renderRideCard = (ride, isIncoming = true) => (
-    <View key={ride.id} style={styles.rideCard}>
+  const renderRideCard = (ride, isToday = true) => (
+    <View key={ride._id} style={styles.rideCard}>
       <View style={styles.rideHeader}>
         <View>
-          <Text style={styles.rideName}>{ride.name}</Text>
-          {ride.code && <Text style={styles.rideCode}>{ride.code}</Text>}
-          <Text style={styles.rideType}>{ride.type} • {ride.vehicle}</Text>
+          <Text style={styles.rideName}>{ride._id}</Text>
+          {/* {ride._id && <Text style={styles.rideCode}>{ride._id}</Text>} */}
+          {/* <Text style={styles.rideType}>{ride.destination}</Text> */}
         </View>
-        <Text style={styles.rideAmount}>{ride.amount}</Text>
+        <Text style={styles.rideAmount}>{ride.price}</Text>
       </View>
 
-      <View style={styles.customerInfo}>
+      {/* <View style={styles.customerInfo}>
         <Text style={styles.customerName}>{ride.customer}</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.phoneButton}
           onPress={() => handleCallCustomer(ride.phone)}
         >
           <Phone color="#FFFFFF" size={16} />
           <Text style={styles.phoneButtonText}>Call</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <View style={styles.rideDetails}>
         <View style={styles.detailRow}>
           <MapPin color="#6B7280" size={16} />
-          <Text style={styles.detailText}>{ride.pickup}</Text>
+          <Text style={styles.detailText}>{ride.destination}</Text>
         </View>
-        {isIncoming && (
+        {/* {isToday && (
           <View style={styles.detailRow}>
             <Clock color="#6B7280" size={16} />
             <Text style={styles.detailText}>
@@ -113,23 +124,23 @@ export default function RidesScreen() {
             </Text>
           </View>
         )}
-        {!isIncoming && (
+        {!isToday && (
           <View style={styles.detailRow}>
             <Clock color="#6B7280" size={16} />
             <Text style={styles.detailText}>
               In progress • {ride.timeElapsed}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
 
-      {isIncoming ? (
+      {/* {isToday ? (
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.rejectButton}>
             <XCircle color="#EF4444" size={20} />
             <Text style={styles.rejectButtonText}>Reject</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.acceptButton}
             onPress={() => handleAcceptRide(ride)}
           >
@@ -137,9 +148,12 @@ export default function RidesScreen() {
             <Text style={styles.acceptButtonText}>Accept</Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.navigateButton}>
+      ) : ( */}
+        {/* <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.navigateButton}
+            onPress={() => router.push(`/ride-detail?rideId=${ride.id}`)}
+          >
             <Navigation color="#FFFFFF" size={20} />
             <Text style={styles.navigateButtonText}>Navigate</Text>
           </TouchableOpacity>
@@ -147,11 +161,79 @@ export default function RidesScreen() {
             <CheckCircle color="#FFFFFF" size={20} />
             <Text style={styles.completeButtonText}>Complete</Text>
           </TouchableOpacity>
-        </View>
-      )}
+        </View> */}
+      {/* )} */}
     </View>
   );
 
+useFocusEffect(
+    useCallback(() => {
+      const getDriverRides = async () => {
+        try {
+          setLoading(true);
+
+          const userDataString = await AsyncStorage.getItem("user");
+          const driveJWT = await AsyncStorage.getItem("token");
+          let user = null;
+          if (userDataString) {
+            user = JSON.parse(userDataString);
+            setDriverData(user);
+          }
+
+          if (!user || !user._id) {
+            console.log("No valid user data");
+            setLoading(false);
+            return;
+          }
+
+          const response = await ApiService.get(
+            `/v1/rides/?page=${page}&limit=5&driver=${user._id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${driveJWT}`,
+                'Content-Type': 'application/json',
+              }
+            }
+          );
+
+          if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch rides');
+          }
+
+          const allRides = response.data.data.rides || [];
+
+          // Filter rides into today / previous
+          const todayList = [];
+          const prevList = [];
+
+          const todayDate = dayjs().format('YYYY-MM-DD');  
+
+          allRides.forEach(ride => {
+            // You may need to adjust this based on your date field name
+            const rideDate = dayjs(ride.startedAt || ride.createdAt);
+            const rideDateStr = rideDate.format('YYYY-MM-DD');
+
+            if (rideDateStr === todayDate) {
+              todayList.push(ride);
+            } else {
+              prevList.push(ride);
+            }
+          });
+
+          setTodayRides(todayList);
+          setPreviousRides(prevList);
+
+        } catch (error) {
+          console.error('❌ Error fetching rides:', error.message || error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      getDriverRides();
+    }, [page])
+  );
+  
   return (
     <View style={styles.container}>
       {/* Tab Selector */}
@@ -159,70 +241,70 @@ export default function RidesScreen() {
         <TouchableOpacity
           style={[
             styles.tab,
-            activeTab === 'incoming' && styles.activeTab,
+            activeTab === 'today' && styles.activeTab,
           ]}
-          onPress={() => setActiveTab('incoming')}
+          onPress={() => setActiveTab('today')}
         >
           <Text
             style={[
               styles.tabText,
-              activeTab === 'incoming' && styles.activeTabText,
+              activeTab === 'today' && styles.activeTabText,
             ]}
           >
-            Incoming Rides
+            Today Rides
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.tab,
-            activeTab === 'ongoing' && styles.activeTab,
+            activeTab === 'previous' && styles.activeTab,
           ]}
-          onPress={() => setActiveTab('ongoing')}
+          onPress={() => setActiveTab('previous')}
         >
           <Text
             style={[
               styles.tabText,
-              activeTab === 'ongoing' && styles.activeTabText,
+              activeTab === 'previous' && styles.activeTabText,
             ]}
           >
-            Ongoing Rides
+            Previous Rides
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {activeTab === 'incoming' && (
+        {activeTab === 'today' && (
           <View style={styles.ridesContainer}>
-            {incomingRides.length === 0 ? (
+            {todayRides.length === 0 ? (
               <View style={styles.emptyState}>
                 <Clock color="#6B7280" size={48} />
                 <Text style={styles.emptyStateText}>
-                  No incoming rides
+                  No today rides
                 </Text>
                 <Text style={styles.emptyStateSubtext}>
                   Make sure you're online to receive requests
                 </Text>
               </View>
             ) : (
-              incomingRides.map((ride) => renderRideCard(ride, true))
+              todayRides.map((ride) => renderRideCard(ride, true))
             )}
           </View>
         )}
 
-        {activeTab === 'ongoing' && (
+        {activeTab === 'previous' && (
           <View style={styles.ridesContainer}>
-            {ongoingRides.length === 0 ? (
+            {previousRides.length === 0 ? (
               <View style={styles.emptyState}>
-                <Car color="#6B7280" size={48} />
+                <Navigation color="#6B7280" size={48} />
                 <Text style={styles.emptyStateText}>
-                  No ongoing rides
+                  No previous rides
                 </Text>
                 <Text style={styles.emptyStateSubtext}>
                   Accept a ride to start earning
                 </Text>
               </View>
             ) : (
-              ongoingRides.map((ride) => renderRideCard(ride, false))
+              previousRides.map((ride) => renderRideCard(ride, false))
             )}
           </View>
         )}

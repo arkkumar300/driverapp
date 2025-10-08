@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { User, Car, CreditCard, Settings, Phone, MapPin, Calendar, LogOut, CreditCard as Edit3, Shield, CircleHelp as HelpCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import {} from '../auth/login'
 
 const driverProfile = {
   name: 'Ravi Kumar',
@@ -38,7 +39,7 @@ export default function ProfileScreen() {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => router.replace('/(auth)/login')
+          onPress: () => router.replace('../auth/login')
         }
       ]
     );
