@@ -132,7 +132,7 @@ export default function RidesScreen() {
             </Text>
           </View>
         )} */}
-      </View>
+      </View> 
 
       {/* {isToday ? (
         <View style={styles.actionButtons}>
